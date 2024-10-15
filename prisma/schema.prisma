@@ -8,18 +8,20 @@ datasource db {
 }
 
 model Trip {
-  id           String        @id @default(uuid())
+  id           String         @id @default(uuid())
   destination  String
   starts_at    DateTime
   ends_at      DateTime
-  is_confirmed Boolean       @default(false)
-  created_at   DateTime      @default(now())
-  participants participant[]
+  is_confirmed Boolean        @default(false)
+  created_at   DateTime       @default(now())
+  participants Participants[]
+  activities   Activity[]
+  links        Link[]
 
   @@map("trips")
 }
 
-model participant {
+model Participants {
   id           String  @id @default(uuid())
   name         String?
   email        String
@@ -29,4 +31,26 @@ model participant {
   trip_id      String
 
   @@map("participants")
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  title     String
+  occurs_at DateTime
+
+  trip    Trip   @relation(fields: [trip_id], references: [id])
+  trip_id String
+
+  @@map("activities")
+}
+
+model Link {
+  id    String @id @default(uuid())
+  title String
+  url   String
+
+  trip    Trip   @relation(fields: [trip_id], references: [id])
+  trip_id String
+
+  @@map("links")
 }
