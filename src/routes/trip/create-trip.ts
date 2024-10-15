@@ -1,10 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import nodemailer from "nodemailer";
-import { dayjs } from "../lib/dayjs";
+import { dayjs } from "../../lib/dayjs";
 import z from "zod";
-import { prisma } from "../lib/prisma";
-import { getMailClient } from "../lib/mail";
+import { prisma } from "../../lib/prisma";
+import { getMailClient } from "../../lib/mail";
+import { ClientError } from "../../errors/client-error";
+import { env } from "../../env";
 
 export async function createTrip(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
@@ -26,11 +28,11 @@ export async function createTrip(app: FastifyInstance) {
         request.body;
 
       if (dayjs(starts_at).isBefore(new Date())) {
-        throw new Error("Starts at date must be in the future");
+        throw new ClientError("Starts at date must be in the future");
       }
 
       if (dayjs(ends_at).isBefore(starts_at)) {
-        throw new Error("Ends at date must be after starts at date");
+        throw new ClientError("Ends at date must be after starts at date");
       }
 
       const trip = await prisma.trip.create({
@@ -58,7 +60,7 @@ export async function createTrip(app: FastifyInstance) {
       const formattedStartDate = dayjs(starts_at).format("LL");
       const formattedEndDate = dayjs(ends_at).format("LL");
 
-      /* const confirmationLink = `${env.API_BASE_URL}/trips/${trip.id}/confirm` */
+      const confirmationLink = `${env.API_BASE_URL}/trips/${trip.id}/confirm`;
 
       const mail = await getMailClient();
 
@@ -80,7 +82,7 @@ export async function createTrip(app: FastifyInstance) {
             <p>Para confirmar sua viagem, clique no link abaixo:</p>
             <p></p>
             <p>
-              <a href="#">Confirmar viagem</a>
+              <a href=${confirmationLink}>Confirmar viagem</a>
             </p>
             <p></p>
             <p>Caso você não saiba do que se trata esse e-mail, apenas ignore esse e-mail.</p>
